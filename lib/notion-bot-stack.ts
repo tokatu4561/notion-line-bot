@@ -45,6 +45,7 @@ export class NotionBotStack extends cdk.Stack {
 
     // dynamodb
     const dynamoTable = new Table(this, "NotionBotTable", {
+      tableName: "line-notion-keys",
       partitionKey: { name: "line_id", type: AttributeType.STRING },
       billingMode: BillingMode.PAY_PER_REQUEST, // Use on-demand billing mode
       encryption: TableEncryption.DEFAULT,
