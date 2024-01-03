@@ -109,7 +109,7 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 						notionClient.AppendText(ctx, databaseId, message.Text)
 
 						// line メッセージを返信
-						replyMessage := message.Text
+						replyMessage := fmt.Sprintf("メッセージ「%s」を Notion に送信しました。", message.Text)
 						_, err = line.Client.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(replyMessage)).Do() 
 
 						if err != nil {
