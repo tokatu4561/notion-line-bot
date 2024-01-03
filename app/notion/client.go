@@ -24,7 +24,7 @@ func NewClient(token string) (*Client, error) {
 	}, nil
 }
 
-func (c *Client)AppendText(ctx context.Context, pageId string, text string) error {
+func(c *Client) AppendText(ctx context.Context, blockId string, text string) error {
 	appendBlockChildrenParam := notionapi.AppendBlockChildrenRequest{
 		Children: []notionapi.Block{
 			&notionapi.ParagraphBlock{
@@ -46,7 +46,7 @@ func (c *Client)AppendText(ctx context.Context, pageId string, text string) erro
 		},
 	}
 
-	_, err := c.api.Block.AppendChildren(ctx, notionapi.BlockID(pageId), &appendBlockChildrenParam)
+	_, err := c.api.Block.AppendChildren(ctx, notionapi.BlockID(blockId), &appendBlockChildrenParam)
 	if err != nil {
 		return err
 	}
