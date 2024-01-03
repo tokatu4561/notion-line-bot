@@ -1,7 +1,12 @@
-import * as cdk from 'aws-cdk-lib';
-import { Construct } from 'constructs';
-import * as goLambda from "@aws-cdk/aws-lambda-go-alpha"
-import { AttributeType, BillingMode, Table, TableEncryption } from 'aws-cdk-lib/aws-dynamodb'
+import * as cdk from "aws-cdk-lib";
+import { Construct } from "constructs";
+import * as goLambda from "@aws-cdk/aws-lambda-go-alpha";
+import {
+  AttributeType,
+  BillingMode,
+  Table,
+  TableEncryption,
+} from "aws-cdk-lib/aws-dynamodb";
 
 // import * as sqs from 'aws-cdk-lib/aws-sqs';
 
@@ -17,13 +22,22 @@ export class NotionBotStack extends cdk.Stack {
     // });
 
     // lambda use go
-    const lambda = new goLambda.GoFunction(this, 'GoLambda', {
-      entry: 'lambda/go/main.go',
+    const lambda = new goLambda.GoFunction(this, "GoLambda", {
+      entry: "lambda/go/main.go",
+      timeout: cdk.Duration.seconds(30),
+      functionName: "NotionBotFunction",
     });
 
     // dynamodb
-    const dynamoTable = new Table(this, 'NotionBotTable', {
-      partitionKey: { name: 'id', type: AttributeType.STRING },
+    const dynamoTable = new Table(this, "NotionBotTable", {
+      partitionKey: { name: "line_id", type: AttributeType.STRING },
+      billingMode: BillingMode.PAY_PER_REQUEST, // Use on-demand billing mode
+      encryption: TableEncryption.DEFAULT,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      pointInTimeRecovery: true,
     });
+
+    // grant lambda to access dynamodb
+    dynamoTable.grantReadWriteData(lambda);
   }
 }
