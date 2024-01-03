@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
-	"lambda/line"
-	"lambda/notion"
+	"app/line"
+	"app/notion"
 	"regexp"
 	"strings"
 
