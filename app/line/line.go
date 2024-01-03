@@ -17,8 +17,8 @@ type Line struct {
 
 func SetUpClient() (*Line, error) {
 	line := &Line{
-		ChannelSecret: os.Getenv("LINE_BOT_CHANNEL_SECRET"),
-		ChannelToken:  os.Getenv("LINE_BOT_CHANNEL_TOKEN"),
+		ChannelSecret: os.Getenv("LINE_CHANNEL_SECRET"),
+		ChannelToken:  os.Getenv("LINE_CHANNEL_TOKEN"),
 	}
 
 	bot, err := linebot.New(
