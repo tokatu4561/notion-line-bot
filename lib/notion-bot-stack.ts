@@ -19,14 +19,29 @@ export class NotionBotStack extends cdk.Stack {
     // example resource
     // const queue = new sqs.Queue(this, 'NotionBotQueue', {
     //   visibilityTimeout: cdk.Duration.seconds(300)
-    // });
+    // })
 
     // lambda use go
     const lambda = new goLambda.GoFunction(this, "GoLambda", {
-      entry: "lambda/go/main.go",
+      entry: "app/main.go",
       timeout: cdk.Duration.seconds(30),
       functionName: "NotionBotFunction",
+      environment: {
+        LINE_CHANNEL_SECRET: process.env.LINE_CHANNEL_SECRET || "",
+        LINE_CHANNEL_TOKEN: process.env.LINE_CHANNEL_TOKEN || "",
+      },
     });
+
+    // api gateway
+    const api = new cdk.aws_apigateway.RestApi(this, "NotionBotApi", {
+      restApiName: "NotionBotApi",
+      description: "This service serves NotionBot",
+    });
+
+    api.root.addMethod(
+      "POST",
+      new cdk.aws_apigateway.LambdaIntegration(lambda)
+    );
 
     // dynamodb
     const dynamoTable = new Table(this, "NotionBotTable", {
