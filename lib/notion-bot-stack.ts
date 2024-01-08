@@ -69,6 +69,9 @@ export class NotionBotStack extends cdk.Stack {
       },
     });
 
+    // grant lambda to access dynamodb
+    dynamoTable.grantReadWriteData(notifyNoteLambda);
+
     // execute lambda every 10 minutes to notify notes on notion to line
     const rule = new events.Rule(this, "NotifyNoteRule", {
       schedule: cdk.aws_events.Schedule.rate(cdk.Duration.minutes(10)),
