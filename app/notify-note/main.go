@@ -19,6 +19,7 @@ type MyEvent struct {
 	Name string `json:"name"`
 }
 
+// TODO: 環境変数にする
 const AWS_REGION = "ap-northeast-1"
 const tableName = "line-notion-keys"
 

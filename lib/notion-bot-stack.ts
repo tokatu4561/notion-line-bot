@@ -9,14 +9,14 @@ import {
 } from "aws-cdk-lib/aws-dynamodb";
 import * as events from "aws-cdk-lib/aws-events";
 import * as targets from "aws-cdk-lib/aws-events-targets";
-import * as sqs from "aws-cdk-lib/aws-sqs";
+// import * as sqs from "aws-cdk-lib/aws-sqs";
 
 export class NotionBotStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // lambda use go
-    const lambda = new goLambda.GoFunction(this, "GoLambda", {
+    // lambda use go (notion-bot)
+    const notionBotLambda = new goLambda.GoFunction(this, "GoLambda", {
       entry: "app/notion-bot/main.go",
       timeout: cdk.Duration.seconds(30),
       functionName: "NotionBotFunction",
@@ -33,7 +33,7 @@ export class NotionBotStack extends cdk.Stack {
     });
     api.root.addMethod(
       "POST",
-      new cdk.aws_apigateway.LambdaIntegration(lambda)
+      new cdk.aws_apigateway.LambdaIntegration(notionBotLambda)
     );
 
     // dynamodb
@@ -47,7 +47,7 @@ export class NotionBotStack extends cdk.Stack {
     });
 
     // grant lambda to access dynamodb
-    dynamoTable.grantReadWriteData(lambda);
+    dynamoTable.grantReadWriteData(notionBotLambda);
 
     // lambda use go
     // notify notes on notion to line
