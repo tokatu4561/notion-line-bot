@@ -53,3 +53,21 @@ func(c *Client) AppendText(ctx context.Context, blockId string, text string) err
 
 	return nil
 }
+
+func(c *Client) GetPage(ctx context.Context, pageId string) (*notionapi.Page, error) {
+	page, err := c.api.Page.Get(ctx, notionapi.PageID(pageId))
+	if err != nil {
+		return nil, err
+	}
+
+	return page, nil
+}
+
+func(c *Client) GetChildren(ctx context.Context, blockId string) ([]notionapi.Block, error) {
+	children, err := c.api.Block.GetChildren(ctx, notionapi.BlockID(blockId), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return children.Results, nil
+}

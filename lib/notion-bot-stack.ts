@@ -7,7 +7,8 @@ import {
   Table,
   TableEncryption,
 } from "aws-cdk-lib/aws-dynamodb";
-
+import * as events from "aws-cdk-lib/aws-events";
+import * as targets from "aws-cdk-lib/aws-events-targets";
 // import * as sqs from 'aws-cdk-lib/aws-sqs';
 
 export class NotionBotStack extends cdk.Stack {
@@ -55,5 +56,23 @@ export class NotionBotStack extends cdk.Stack {
 
     // grant lambda to access dynamodb
     dynamoTable.grantReadWriteData(lambda);
+
+    // lambda use go
+    // notify notes on notion to line
+    const notifyNoteLambda = new goLambda.GoFunction(this, "NotifyNoteLambda", {
+      entry: "app/notify_note/main.go",
+      timeout: cdk.Duration.seconds(30),
+      functionName: "NotifyNoteFunction",
+      environment: {
+        LINE_CHANNEL_SECRET: process.env.LINE_CHANNEL_SECRET || "",
+        LINE_CHANNEL_TOKEN: process.env.LINE_CHANNEL_TOKEN || "",
+      },
+    });
+
+    // execute lambda every 10 minutes to notify notes on notion to line
+    const rule = new events.Rule(this, "NotifyNoteRule", {
+      schedule: cdk.aws_events.Schedule.rate(cdk.Duration.minutes(10)),
+    });
+    rule.addTarget(new targets.LambdaFunction(notifyNoteLambda));
   }
 }
