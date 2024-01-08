@@ -1,18 +1,16 @@
 package main
 
 import (
-	"context"
-	"fmt"
+	"app/db"
 	"app/line"
 	"app/notion"
+	"context"
+	"fmt"
 	"regexp"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/guregu/dynamo"
 	"github.com/line/line-bot-sdk-go/linebot"
 )
 
@@ -20,18 +18,6 @@ type MyEvent struct {
 	Name string `json:"name"`
 }
 
-const AWS_REGION = "ap-northeast-1"
-const tableName = "line-notion-keys"
-
-var db *dynamo.DB
-
-type LineNotionKeyParam struct {
-	LineId string `dynamo:"line_id" json:"line_id"`
-	IntegrationKey string `dynamo:"integration_key" json:"integration_key"`
-	DatabaseId string `dynamo:"database_id" json:"database_id"`
-}
-
-// 仮のlambda関数
 func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	ctx := context.Background()
 
@@ -45,7 +31,7 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 		return events.APIGatewayProxyResponse{Body: "line parse error", StatusCode: 500}, err
 	}
 
-	db, err = setUpDB()
+	db := db.NewRepository()
 	if err != nil {
 		return events.APIGatewayProxyResponse{Body: "db connection error", StatusCode: 500}, err
 	}
@@ -71,7 +57,7 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 						databaseId := re.FindStringSubmatch(message.Text)[1]
 
 						// db に登録
-						err = registrationNotionKey(userId, integrationKey, databaseId)
+						db.Add(userId, integrationKey, databaseId)
 						if err != nil {
 							return events.APIGatewayProxyResponse{
 								Body:       err.Error(),
@@ -91,8 +77,7 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 						}
 					} else {
 						// ユーザーを特定
-						var param LineNotionKeyParam
-						err = db.Table(tableName).Get("line_id", userId).One(&param)
+						user, err := db.Get(userId)
 						if err != nil {
 							return events.APIGatewayProxyResponse{
 								Body:       err.Error(),
@@ -101,8 +86,8 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 						}
 
 						// インテグレーションキーを取得
-						integrationKey := param.IntegrationKey
-						databaseId := param.DatabaseId
+						integrationKey := user.IntegrationKey
+						databaseId := user.DatabaseId
 
 						// メッセージを Notion に送信
 						notionClient, _ := notion.NewClient(integrationKey)
@@ -128,35 +113,6 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 		Body:       fmt.Sprintf("Hello, %v", string("hello")),
 		StatusCode: 200,
 	}, nil
-}
-
-// registration integration key and pageId to db 
-func registrationNotionKey(userId string, integrationKey string, blockId string) error {
-	param := LineNotionKeyParam{
-		LineId: userId,
-		IntegrationKey: integrationKey,
-		DatabaseId: blockId,
-	}
-
-	err := db.Table(tableName).Put(param).Run()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func setUpDB() (*dynamo.DB, error) {
-	sess, err := session.NewSession(&aws.Config{
-		Region:      aws.String(AWS_REGION),
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	db := dynamo.New(sess)
-
-	return db, nil
 }
 
 func main() {

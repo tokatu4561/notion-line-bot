@@ -52,7 +52,7 @@ export class NotionBotStack extends cdk.Stack {
     // lambda use go
     // notify notes on notion to line
     const notifyNoteLambda = new goLambda.GoFunction(this, "NotifyNoteLambda", {
-      entry: "app/notify_note/main.go",
+      entry: "app/notify-note/main.go",
       timeout: cdk.Duration.seconds(30),
       functionName: "NotifyNoteFunction",
       environment: {
