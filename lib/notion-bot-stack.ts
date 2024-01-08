@@ -9,22 +9,15 @@ import {
 } from "aws-cdk-lib/aws-dynamodb";
 import * as events from "aws-cdk-lib/aws-events";
 import * as targets from "aws-cdk-lib/aws-events-targets";
-// import * as sqs from 'aws-cdk-lib/aws-sqs';
+import * as sqs from "aws-cdk-lib/aws-sqs";
 
 export class NotionBotStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // The code that defines your stack goes here
-
-    // example resource
-    // const queue = new sqs.Queue(this, 'NotionBotQueue', {
-    //   visibilityTimeout: cdk.Duration.seconds(300)
-    // })
-
     // lambda use go
     const lambda = new goLambda.GoFunction(this, "GoLambda", {
-      entry: "app/main.go",
+      entry: "app/notion-bot/main.go",
       timeout: cdk.Duration.seconds(30),
       functionName: "NotionBotFunction",
       environment: {
@@ -38,7 +31,6 @@ export class NotionBotStack extends cdk.Stack {
       restApiName: "NotionBotApi",
       description: "This service serves NotionBot",
     });
-
     api.root.addMethod(
       "POST",
       new cdk.aws_apigateway.LambdaIntegration(lambda)
@@ -77,5 +69,19 @@ export class NotionBotStack extends cdk.Stack {
       schedule: events.Schedule.rate(cdk.Duration.hours(24)),
     });
     rule.addTarget(new targets.LambdaFunction(notifyNoteLambda));
+
+    // const deadLetterQueue = new sqs.Queue(this, "DeadLetterQueue", {
+    //   retentionPeriod: cdk.Duration.days(3),
+    //   encryption: sqs.QueueEncryption.KMS_MANAGED,
+    // });
+
+    // const queue = new sqs.Queue(this, "NotionBotQueue", {
+    //   visibilityTimeout: cdk.Duration.seconds(30), // lambda のタイムアウト時間に合わせる
+    //   encryption: sqs.QueueEncryption.KMS_MANAGED, // default encryption
+    //   deadLetterQueue: {
+    //     maxReceiveCount: 3,
+    //     queue: deadLetterQueue,
+    //   },
+    // });
   }
 }
