@@ -65,12 +65,16 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 		var messages []string
 		for _, block := range blocks {
 			paragpagh := block.(*notionapi.ParagraphBlock)
+			// メモの内容が空の場合はスキップ
+			if len(paragpagh.Paragraph.RichText) == 0 {
+				continue
+			}
 			text := paragpagh.Paragraph.RichText[0].Text.Content
 			messages = append(messages, text)
 		}
 
 		// line に通知
-		textMessage := ""
+		textMessage := "メモリストの内容\n"
 		for _, message := range messages {
 			textMessage += message + "\n"
 		}
